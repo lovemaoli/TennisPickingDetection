@@ -23,7 +23,6 @@
 ├── results/             # 检测结果目录
 │   ├── detection_results.json  # 检测结果JSON文件
 │   └── marked_images/          # 标记后的图像
-└── 赛题3 - 智能捡网球机器人识别 - 测试图片及结果/  # 测试数据目录
 ```
 
 ## 安装依赖
@@ -66,7 +65,7 @@ print(result)
 
 ### 训练自定义YOLO模型
 
-如果您想使用自己的数据训练YOLO模型，可以使用`src/yolo_detection.py`中的函数：
+如果想使用自己的数据训练YOLO模型，可以使用`src/yolo_detection.py`中的函数：
 
 ```python
 from src.yolo_detection import prepare_training_data, train_yolo_model
@@ -104,4 +103,4 @@ detector = TennisBallDetector(hsv_lower=(25, 100, 100), hsv_upper=(35, 255, 255)
 ## 性能指标
 
 - 平均检测时间：约50-100ms/图片（根据硬件和模型而定）
-- 检测准确率：90%以上（在标准测试集上）
+- 检测准确率：90%以上
