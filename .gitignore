@@ -1,0 +1,4 @@
+/imgs/*
+yolov5s.pt
+*.pyc
+*.json
