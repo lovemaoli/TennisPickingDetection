@@ -11,13 +11,6 @@ class ResultVisualizer:
     """检测结果可视化器，提供交互式界面展示检测结果"""
     
     def __init__(self, image_folder, json_file):
-        """
-        初始化可视化器
-        
-        参数:
-            image_folder: 图像文件夹路径
-            json_file: 检测结果JSON文件路径
-        """
         # 加载数据
         self.image_folder = image_folder
         self.json_file = json_file
