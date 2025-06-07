@@ -2,3 +2,4 @@
 yolov5s.pt
 *.pyc
 *.json
+test_*.*

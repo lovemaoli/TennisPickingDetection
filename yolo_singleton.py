@@ -1,9 +1,11 @@
+"""
+YOLO网球检测器单例模式实现
+避免每次创建检测器实例都下载模型
+"""
 import cv2
 import numpy as np
 import os
-import json
 import torch
-import urllib.request
 import time
 import warnings
 import ssl
@@ -14,7 +16,7 @@ _yolo_model = None
 _model_load_attempted = False
 
 class YOLOTennisBallDetector:
-    """使用YOLO模型的网球检测器"""
+    """使用YOLO模型的网球检测器，单例模式实现"""
     
     def __init__(self, model_path=None):
         """
@@ -26,87 +28,93 @@ class YOLOTennisBallDetector:
         global _yolo_model, _model_load_attempted
         
         self.model = None
+        self.yolo_available = False
+        
         try:
             # 检查是否已经有加载好的模型实例
             if _yolo_model is not None:
                 print("使用已加载的YOLO模型")
                 self.model = _yolo_model
+                self.yolo_available = True
+                return
+                
             # 如果之前尝试过加载但失败了，就不再尝试，避免重复报错
-            elif _model_load_attempted:
-                print("YOLO模型初始化失败，将只使用传统方法")
+            if _model_load_attempted:
+                print("YOLO模型之前初始化失败，将只使用传统方法")
+                return
+                
+            _model_load_attempted = True
+            
+            # 配置SSL上下文，忽略证书验证问题
+            try:
+                ssl._create_default_https_context = ssl._create_unverified_context
+            except Exception:
+                pass
+            
+            # 禁止警告
+            warnings.filterwarnings("ignore", category=UserWarning)
+            
+            # 检查本地模型文件
+            local_path = os.path.join(os.path.dirname(__file__), "yolov5s.pt")
+            
+            # 加载本地模型
+            if model_path and os.path.exists(model_path):
+                print("加载本地YOLO模型:", model_path)
+                self.model = torch.hub.load(
+                    'ultralytics/yolov5', 
+                    'custom', 
+                    path=model_path, 
+                    force_reload=False, 
+                    verbose=False,
+                    device='cpu'
+                )
+            elif os.path.exists(local_path):
+                print("加载本地预训练模型:", local_path)
+                self.model = torch.hub.load(
+                    'ultralytics/yolov5', 
+                    'custom', 
+                    path=local_path, 
+                    force_reload=False, 
+                    verbose=False,
+                    device='cpu'  # 直接指定使用CPU
+                )
             else:
-                _model_load_attempted = True
-                
-                # 配置SSL上下文，忽略证书验证问题
-                ssl_context = ssl._create_unverified_context()
-                
-                # 设置更长的超时时间
-                timeout = 30  # 30秒超时
-                
-                # 禁止警告
-                warnings.filterwarnings("ignore", category=UserWarning)
-                
-                # 加载本地模型
-                if model_path and os.path.exists(model_path):
-                    print("加载本地YOLO模型")
-                    self.model = torch.hub.load(
-                        'ultralytics/yolov5', 
-                        'custom', 
-                        path=model_path, 
-                        force_reload=False, 
-                        verbose=False
-                    )
-                    print("YOLO模型加载成功，使用设备:", self.model.device)
-                else:                    # 使用本地保存的预训练模型
-                    local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "yolov5s.pt")
-                    if os.path.exists(local_path):
-                        print("加载本地预训练模型:", local_path)
-                        self.model = torch.hub.load(
-                            'ultralytics/yolov5', 
-                            'custom', 
-                            path=local_path, 
-                            force_reload=False, 
-                            verbose=False,
-                            device='cpu'  # 直接指定使用CPU
-                        )
-                    else:
-                        # 下载预训练模型
-                        print("加载预训练模型")
-                        self.model = torch.hub.load(
-                            'ultralytics/yolov5', 
-                            'yolov5s', 
-                            pretrained=True, 
-                            force_reload=False, 
-                            verbose=False,
-                            device='cpu'  # 直接指定使用CPU
-                        )
-                        # 保存模型到本地以便下次使用
-                        try:
-                            torch.save(self.model.state_dict(), local_path)
-                            print(f"模型已保存到: {local_path}")
-                        except Exception as e:
-                            print(f"保存模型失败: {e}")
-                    
-                    print("YOLO模型加载成功，使用设备: cpu")
-                
-                # 设置为CPU模式，避免CUDA问题
-                if hasattr(self.model, 'to'):
-                    self.model.to('cpu')
-                
-                # 保存到全局变量
-                _yolo_model = self.model
-                
+                # 下载预训练模型
+                print("加载预训练模型，这可能需要一些时间...")
+                self.model = torch.hub.load(
+                    'ultralytics/yolov5', 
+                    'yolov5s', 
+                    pretrained=True, 
+                    force_reload=False, 
+                    verbose=False,
+                    device='cpu'  # 直接指定使用CPU
+                )
+                # 保存模型到本地以便下次使用
+                try:
+                    torch.save(self.model.state_dict(), local_path)
+                    print(f"模型已保存到: {local_path}")
+                except Exception as e:
+                    print(f"保存模型失败: {e}")
+            
+            # 设置为CPU模式，避免CUDA问题
+            if hasattr(self.model, 'to'):
+                self.model.to('cpu')
+            
+            # 设置网球类别（YOLOv5s预训练模型中的第32类为"sports ball"）
+            self.ball_class = 32
+            
+            # 设置置信度阈值
+            self.model.conf = 0.5
+            
+            # 保存到全局变量
+            _yolo_model = self.model
+            self.yolo_available = True
+            
+            print("YOLO模型加载成功，使用设备: cpu")
+            
         except Exception as e:
             print(f"初始化YOLO模型失败，将使用传统方法: {str(e)}")
             self.model = None
-        
-        # 设置网球类别（YOLOv5s预训练模型中的第32类为"sports ball"）
-        self.ball_class = 32
-        
-        # 设置置信度阈值
-        if self.model:
-            self.model.conf = 0.5
-        
     def detect(self, image_path):
         """
         检测图片中的网球
@@ -118,7 +126,8 @@ class YOLOTennisBallDetector:
             列表，包含每个检测到的网球位置 [{'x': x, 'y': y, 'w': w, 'h': h}, ...]
         """
         # 如果模型加载失败，直接返回空列表
-        if self.model is None:
+        if self.model is None or not self.yolo_available:
+            print("YOLO模型不可用，无法检测")
             return []
             
         # 确保图片存在
@@ -138,7 +147,8 @@ class YOLOTennisBallDetector:
                 x1, y1, x2, y2, conf, cls = detection.cpu().numpy()
                 
                 # 只保留网球类别或所有类别（如果使用自定义模型）
-                if self.model.names[int(cls)] == 'sports ball' or int(cls) == self.ball_class:
+                # 这里直接使用32，不使用self.ball_class
+                if self.model.names[int(cls)] == 'sports ball' or int(cls) == 32:
                     # 计算边界框
                     x = int(x1)
                     y = int(y1)

@@ -3,6 +3,7 @@ import numpy as np
 import os
 import json
 import torch
+import time
 from pathlib import Path
 from tennis_detection import TennisBallDetector
 from yolo_detection import YOLOTennisBallDetector
@@ -10,8 +11,7 @@ from yolo_detection import YOLOTennisBallDetector
 
 class HybridTennisBallDetector:
     """混合网球检测器，结合传统方法和YOLO方法"""
-    
-    def __init__(self, model_path=None, hsv_lower=(25, 100, 100), hsv_upper=(65, 255, 255)):
+      def __init__(self, model_path=None, hsv_lower=(25, 100, 100), hsv_upper=(65, 255, 255)):
         """
         初始化混合网球检测器
         
@@ -34,14 +34,22 @@ class HybridTennisBallDetector:
         返回:
             列表，包含每个检测到的网球位置 [{'x': x, 'y': y, 'w': w, 'h': h}, ...]
         """
+        start_time = time.time()
+        
         # 使用YOLO检测
         yolo_results = self.yolo_detector.detect(image_path)
         
-        # 使用传统方法检测
-        trad_results = self.trad_detector.detect(image_path)
+        # 如果YOLO检测失败或没有结果，使用传统方法
+        trad_results = []
+        if not yolo_results:
+            print("使用传统方法检测")
+            trad_results = self.trad_detector.detect(image_path)
         
         # 合并结果，去重
         results = self._merge_results(yolo_results, trad_results, image_path)
+        
+        elapsed_time = int((time.time() - start_time) * 1000)  # 毫秒
+        print(f"总检测耗时: {elapsed_time} 毫秒")
         
         return results
         
@@ -148,7 +156,23 @@ def detect_all_images(input_dir, output_json=None, output_dir=None, model_path=N
         
         # 检测网球
         balls = detector.detect(image_path)
-        results_dict[image_file] = balls
+        
+        # 将NumPy类型转换为Python标准类型以便JSON序列化
+        converted_balls = []
+        for ball in balls:
+            converted_ball = {
+                'x': int(ball['x']),
+                'y': int(ball['y']),
+                'w': int(ball['w']),
+                'h': int(ball['h'])
+            }
+            # 保留置信度如果存在
+            if 'confidence' in ball:
+                converted_ball['confidence'] = float(ball['confidence'])
+            
+            converted_balls.append(converted_ball)
+        
+        results_dict[image_file] = converted_balls
         
         # 保存标记后的图片
         if output_dir:

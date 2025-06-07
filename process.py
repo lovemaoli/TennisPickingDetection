@@ -1,10 +1,24 @@
+"""
+使用YOLO单例模式修改HybridTennisBallDetector类，避免重复下载模型
+"""
 import os
 import time
 import cv2
 import numpy as np
 import json
+import warnings
+import ssl
 from pathlib import Path
 import sys
+
+# 尝试导入单例模式的YOLO检测器
+try:
+    from yolo_singleton import YOLOTennisBallDetector
+    YOLO_SINGLETON_AVAILABLE = True
+    print("成功导入YOLO单例模式检测器")
+except ImportError:
+    YOLO_SINGLETON_AVAILABLE = False
+    print("无法导入YOLO单例模式检测器，将回退到本地实现")
 
 # 导入其他模块（如果本地导入失败，则直接导入函数）
 try:
@@ -86,105 +100,6 @@ except ImportError:
             return results
 
 
-# 检查是否有可用的CUDA设备
-try:
-    import torch
-    CUDA_AVAILABLE = torch.cuda.is_available()
-except (ImportError, AttributeError):
-    CUDA_AVAILABLE = False
-
-
-# 检查是否可以使用YOLO模型
-try:
-    import torch
-    
-    class YOLOTennisBallDetector:
-        """使用YOLO模型的网球检测器"""
-        
-        def __init__(self, model_path=None):
-            """
-            初始化YOLO网球检测器
-            
-            参数:
-                model_path: YOLO模型路径，如果为None，则使用YOLOv5s预训练模型
-            """            # 设置设备，强制使用CPU以提高兼容性
-            self.device = 'cpu'  # 即使有CUDA也先尝试CPU，更可靠
-            
-            try:
-                # 加载YOLO模型
-                if model_path and os.path.exists(model_path):
-                    self.model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path, device=self.device, force_reload=True)
-                else:
-                    # 使用预训练模型，并指定使用CPU，强制重新加载以避免缓存问题
-                    self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s', device=self.device, force_reload=True)
-                
-                # 设置网球类别（YOLOv5s预训练模型中的第32类为"sports ball"）
-                self.ball_class = 32
-                
-                # 设置置信度阈值
-                self.model.conf = 0.5
-                
-                self.yolo_available = True
-                print("YOLO模型加载成功，使用设备:", self.device)
-            except Exception as e:
-                print(f"初始化YOLO模型失败，将使用传统方法: {e}")
-                self.yolo_available = False
-            
-        def detect(self, image_path):
-            """
-            检测图片中的网球
-            
-            参数:
-                image_path: 图片路径
-                
-            返回:
-                列表，包含每个检测到的网球位置 [{'x': x, 'y': y, 'w': w, 'h': h}, ...]
-            """
-            if not self.yolo_available:
-                return []
-                
-            # 确保图片存在
-            if not os.path.exists(image_path):
-                print(f"无法找到图片: {image_path}")
-                return []
-                
-            try:
-                # 推理
-                results = self.model(image_path)
-                
-                # 提取网球检测结果
-                balls = []
-                
-                # 处理检测结果
-                for detection in results.xyxy[0]:
-                    x1, y1, x2, y2, conf, cls = detection.cpu().numpy()
-                    
-                    # 只保留网球类别或所有类别（如果使用自定义模型）
-                    if self.model.names[int(cls)] == 'sports ball' or int(cls) == self.ball_class:
-                        # 计算边界框
-                        x = int(x1)
-                        y = int(y1)
-                        w = int(x2 - x1)
-                        h = int(y2 - y1)
-                        
-                        balls.append({
-                            'x': x,
-                            'y': y,
-                            'w': w,
-                            'h': h
-                        })
-                        
-                return balls
-            except Exception as e:
-                print(f"YOLO检测失败: {e}")
-                return []
-                
-    YOLO_AVAILABLE = True
-except (ImportError, Exception) as e:
-    print(f"无法导入YOLO相关模块: {e}")
-    YOLO_AVAILABLE = False
-
-
 class HybridTennisBallDetector:
     """混合检测器，结合传统方法和深度学习方法"""
     
@@ -200,14 +115,12 @@ class HybridTennisBallDetector:
         
         # 如果可用且启用，初始化YOLO检测器
         self.yolo_detector = None
-        if use_yolo and YOLO_AVAILABLE:
+        if use_yolo and YOLO_SINGLETON_AVAILABLE:
             try:
                 self.yolo_detector = YOLOTennisBallDetector()
-                if not self.yolo_detector.yolo_available:
-                    self.yolo_detector = None
-                    print("YOLO模型初始化失败，将只使用传统方法")
+                print("使用YOLO单例模式检测器")
             except Exception as e:
-                print(f"创建YOLO检测器时出错: {e}")
+                print(f"创建YOLO单例检测器时出错: {e}")
                 self.yolo_detector = None
         
         # 确保至少有一个检测器可用
@@ -228,7 +141,7 @@ class HybridTennisBallDetector:
         traditional_results = []
         
         # 尝试使用YOLO检测
-        if self.yolo_detector and self.yolo_detector.yolo_available:
+        if self.yolo_detector:
             try:
                 yolo_results = self.yolo_detector.detect(image_path)
                 if yolo_results:  
@@ -245,7 +158,7 @@ class HybridTennisBallDetector:
             except Exception as e:
                 print(f"传统检测方法出错: {e}")
         
-        # 返回更好的结果，或合并结果
+        # 返回更好的结果
         if yolo_results and not traditional_results:
             return yolo_results
         elif traditional_results and not yolo_results:
@@ -262,13 +175,6 @@ class HybridTennisBallDetector:
             return []
 
 
-#
-#参数:
-#   img_path: 要识别的图片的路径
-#
-#返回:
-#   返回结果为各赛题中要求的识别结果，具体格式可参考提供压缩包中的 "图片对应输出结果.txt" 中一张图片对应的结果
-#
 def process_img(img_path):
     """处理单张图片，识别网球位置
     
@@ -294,20 +200,28 @@ def process_img(img_path):
             print(f"读取图片时出错: {e}")
             return []
             
-        # 首先尝试只用传统方法（更稳定，性能好）
-        try:
-            detector = HybridTennisBallDetector(use_yolo=False, use_traditional=True)
-            results = detector.detect(img_path)
-            if results:
-                return results
-        except Exception as e:
-            print(f"使用传统方法检测失败: {e}")
-
-        # 如果传统方法没检测出结果，尝试混合方法（可能使用YOLO）
+        # 尝试使用混合方法检测（先尝试YOLO，如果失败再用传统方法）
         try:
             detector = HybridTennisBallDetector(use_yolo=True, use_traditional=True)
             results = detector.detect(img_path)
-            return results
+            
+            # 转换NumPy类型为标准Python类型
+            if results:
+                converted_results = []
+                for ball in results:
+                    converted_ball = {
+                        'x': int(ball['x']),
+                        'y': int(ball['y']),
+                        'w': int(ball['w']),
+                        'h': int(ball['h'])
+                    }
+                    # 保留置信度如果存在
+                    if 'confidence' in ball:
+                        converted_ball['confidence'] = float(ball['confidence'])
+                    
+                    converted_results.append(converted_ball)
+                return converted_results
+            
         except Exception as e:
             print(f"使用混合检测方法失败: {e}")
             
@@ -322,9 +236,7 @@ def process_img(img_path):
 
 
 #
-#以下代码仅作为选手测试代码时使用，仅供参考，可以随意修改
-#但是最终提交代码后，process.py文件是作为模块进行调用，而非作为主程序运行
-#因此提交时请根据情况删除不必要的额外代码
+# 以下代码仅作为测试时使用
 #
 if __name__=='__main__':
     imgs_folder = './imgs/'
@@ -385,6 +297,7 @@ if __name__=='__main__':
     
     # 保存结果到文件
     output_file = 'detection_results.json'
+    
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(results_dict, f, indent=4, ensure_ascii=False)
     
