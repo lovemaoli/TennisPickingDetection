@@ -3,3 +3,4 @@ yolov5s.pt
 *.pyc
 *.json
 test_*.*
+main.py
