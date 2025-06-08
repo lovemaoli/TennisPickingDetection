@@ -1,177 +1,191 @@
 \documentclass{beamer}
-\usepackage{xeCJK} % 支持中文
-\setCJKmainfont{SimSun} % 设置中文字体，例如宋体
+\usepackage{ctex} % 支持中文
+\usepackage{graphicx} % 支持插入图片
+\usepackage{booktabs} % 支持更美观的表格
 
-\usetheme{Madrid} % 您可以选择喜欢的主题
-\usecolortheme{default}
+% 主题选择 (可以根据喜好选择其他主题)
+% \usetheme{Madrid}
+\usetheme{CambridgeUS}
+% \usetheme{AnnArbor}
+% \usetheme{Boadilla}
+% \usetheme{Warsaw}
 
 \title{智能网球检测系统}
-\author{项目团队}
+\author{黄勖、徐安妮}
 \date{\today}
 
 \begin{document}
 
 % 标题页
 \begin{frame}
-  \titlepage
+    \titlepage
 \end{frame}
 
 % 目录
 \begin{frame}{目录}
-  \tableofcontents
+    \tableofcontents
 \end{frame}
 
-% 项目概述
+%------------------------------------------------
 \section{项目概述}
+%------------------------------------------------
 \begin{frame}{项目概述}
-  \begin{itemize}
-    \item \textbf{目标}: 开发一个高精度的网球检测系统，主要用于机器人捡球场景。
-    \item \textbf{能力}: 在各种光照条件和复杂背景下准确识别网球，处理多个网球。
-  \end{itemize}
+    \begin{itemize}
+        \item \textbf{目标}: 开发一个高精度的网球检测系统，主要用于机器人捡球场景。
+        \item \textbf{能力}: 在各种光照条件和复杂背景下准确识别网球，处理多个网球。
+    \end{itemize}
 \end{frame}
 
 \subsection{主要功能}
 \begin{frame}{主要功能}
-  \begin{itemize}
-    \item 单张图片网球检测
-    \item 视频流实时网球检测 (规划中)
-    \item 支持多种检测方法（传统图像处理、深度学习）
-    \item 适应不同光照和场地条件
-  \end{itemize}
+    \begin{itemize}
+        \item 单张图片网球检测
+        \item 支持多种检测方法（传统图像处理、深度学习）
+        \item 适应不同光照和场地条件
+    \end{itemize}
 \end{frame}
 
-% 技术架构
+%------------------------------------------------
 \section{技术架构}
+%------------------------------------------------
 \begin{frame}{技术架构}
-  系统采用混合检测策略，结合传统计算机视觉和深度学习方法的优点。
-  \begin{itemize}
-    \item \textbf{传统检测模块} (`tennis_detection.py`): 基于颜色和形状。
-    \item \textbf{YOLO检测模块} (`yolo_singleton.py`): 基于YOLOv5，单例模式，本地缓存。
-    \item \textbf{混合检测模块} (`hybrid_detection.py`): 结合两者优势，自适应选择。
-    \item \textbf{主处理模块} (`process_new.py`): 统一接口，错误处理。
-  \end{itemize}
+    系统采用混合检测策略，结合传统计算机视觉和深度学习方法的优点。
+    \begin{itemize}
+        \item \textbf{传统检测模块} (\texttt{tennis\_detection.py}): 基于颜色和形状。
+        \item \textbf{YOLO检测模块} (\texttt{yolo\_singleton.py}): 基于YOLOv5，单例模式，本地缓存。
+        \item \textbf{混合检测模块} (\texttt{hybrid\_detection.py}): 结合两者优势，自适应选择。
+        \item \textbf{主处理模块} (\texttt{process.py}): 统一接口，错误处理。
+    \end{itemize}
 \end{frame}
 
-% 技术实现细节
+%------------------------------------------------
 \section{技术实现细节}
+%------------------------------------------------
 \subsection{传统检测方法}
 \begin{frame}{传统检测方法}
-  \begin{enumerate}
-    \item \textbf{预处理}: 图像增强、噪声去除。
-    \item \textbf{颜色分割}: HSV颜色空间提取特征颜色。
-    \item \textbf{形态学操作}: 去除噪点、连接断裂区域。
-    \item \textbf{轮廓分析}: 基于面积、圆度等特征过滤。
-    \item \textbf{连接网球分离}: 距离变换和分水岭算法。
-  \end{enumerate}
+    \begin{enumerate}
+        \item \textbf{预处理}: 图像增强、噪声去除。
+        \item \textbf{颜色分割}: HSV颜色空间提取特征颜色。
+        \item \textbf{形态学操作}: 去除噪点、连接断裂区域。
+        \item \textbf{轮廓分析}: 基于面积、圆度等特征过滤。
+        \item \textbf{连接网球分离}: 距离变换和分水岭算法。
+    \end{enumerate}
 \end{frame}
 
 \subsection{YOLO深度学习检测}
 \begin{frame}{YOLO深度学习检测}
-  基于YOLOv5预训练模型进行优化:
-  \begin{itemize}
-    \item \textbf{模型选择}: YOLOv5s。
-    \item \textbf{单例模式}: 避免重复加载，提高效率。
-    \item \textbf{本地缓存}: 模型本地化，避免重复下载。
-    \item \textbf{设备优化}: 优先CPU，提高兼容性。
-    \item \textbf{错误处理}: 完善的异常捕获。
-  \end{itemize}
+    基于YOLOv5预训练模型进行优化:
+    \begin{itemize}
+        \item \textbf{模型选择}: YOLOv5s。
+        \item \textbf{单例模式}: 避免重复加载，提高效率。
+        \item \textbf{本地缓存}: 模型本地化，避免重复下载。
+        \item \textbf{设备优化}: 优先CPU，提高兼容性。
+        \item \textbf{错误处理}: 完善的异常捕获。
+    \end{itemize}
 \end{frame}
 
 \subsection{混合检测策略}
 \begin{frame}{混合检测策略}
-  组合两种方法的优点:
-  \begin{itemize}
-    \item \textbf{优先YOLO}: 网络条件允许时首选。
-    \item \textbf{自动切换}: YOLO失败时切换到传统方法。
-    \item \textbf{结果合并与去重}: 提高准确率。
-    \item \textbf{置信度评估}: 选择最终结果。
-  \end{itemize}
+    组合两种方法的优点:
+    \begin{itemize}
+        \item \textbf{优先YOLO}: 网络条件允许时首选。
+        \item \textbf{自动切换}: YOLO失败时切换到传统方法。
+        \item \textbf{结果合并与去重}: 提高准确率。
+        \item \textbf{置信度评估}: 选择最终结果。
+    \end{itemize}
 \end{frame}
 
-% 关键问题及解决方案
+%------------------------------------------------
 \section{关键问题及解决方案}
+%------------------------------------------------
 \begin{frame}{关键问题及解决方案}
-  \begin{itemize}
-    \item \textbf{YOLO模型重复下载}:
     \begin{itemize}
-        \item 解决方案: 单例模式、本地缓存、全局状态记录。
+        \item \textbf{YOLO模型重复下载}:
+            \begin{itemize}
+                \item 解决方案: 单例模式、本地缓存、全局状态记录。
+            \end{itemize}
+        \item \textbf{SSL证书验证错误}:
+            \begin{itemize}
+                \item 解决方案: 配置SSL上下文、增加超时、错误处理。
+            \end{itemize}
+        \item \textbf{NumPy类型JSON串行化}:
+            \begin{itemize}
+                \item 解决方案: 转换为标准Python类型、显式转换。
+            \end{itemize}
+        \item \textbf{网球连接问题}:
+            \begin{itemize}
+                \item 解决方案: 分水岭算法、形状后处理、YOLO结果增强。
+            \end{itemize}
     \end{itemize}
-    \item \textbf{SSL证书验证错误}:
-    \begin{itemize}
-        \item 解决方案: 配置SSL上下文、增加超时、错误处理。
-    \end{itemize}
-    \item \textbf{NumPy类型JSON序列化}:
-    \begin{itemize}
-        \item 解决方案: 转换为标准Python类型、显式转换。
-    \end{itemize}
-    \item \textbf{网球连接问题}:
-    \begin{itemize}
-        \item 解决方案: 分水岭算法、形状后处理、YOLO结果增强。
-    \end{itemize}
-  \end{itemize}
 \end{frame}
 
-% 使用指南
+%------------------------------------------------
 \section{使用指南}
-\begin{frame}{使用指南}
-  \textbf{环境准备}:
-  \begin{verbatim}
+%------------------------------------------------
+\begin{frame}[fragile]{使用指南} % 使用 fragile 选项以更好地处理 verbatim 环境
+    \textbf{环境准备}:
+\begin{verbatim}
 pip install -r requirements.txt
-  \end{verbatim}
-  \vspace{0.5cm}
-  \textbf{单张图片检测示例}:
-  \begin{verbatim}
-from process_new import process_img
+\end{verbatim}
+
+    \vspace{0.5cm}
+    \textbf{单张图片检测示例}:
+\begin{verbatim}
+from process import process_img
 
 results = process_img("path/to/image.jpg")
 print(results)
-  \end{verbatim}
-  (注意: `process.py` 可能已被 `process_new.py` 替代)
+\end{verbatim}
 \end{frame}
 
-% 性能指标
+%------------------------------------------------
 \section{性能指标}
+%------------------------------------------------
 \begin{frame}{性能指标}
-  \begin{itemize}
-    \item \textbf{平均检测时间}: 70-100毫秒/张 (使用缓存模型)
-    \item \textbf{准确率}: >90% (标准网球场景)
-    \item \textbf{召回率}: >85% (复杂背景场景)
-    \item \textbf{误检率}: <5% (针对类似形状物体)
-  \end{itemize}
+    \begin{itemize}
+        \item \textbf{平均检测时间}: 70-100毫秒/张 (使用缓存模型)
+        \item \textbf{准确率}: >90% (标准网球场景)
+        \item \textbf{召回率}: >85% (复杂背景场景)
+        \item \textbf{误检率}: <5% (针对类似形状物体)
+    \end{itemize}
 \end{frame}
 
-% 项目文件说明
-\section{项目文件说明}
-\begin{frame}{项目文件说明}
-  \begin{itemize}
-    \item \texttt{process\_new.py}: 主处理入口 (推荐使用)
-    \item \texttt{yolo\_singleton.py}: 优化后的YOLO单例实现
-    \item \texttt{src/tennis\_detection.py}: 传统方法检测
-    \item \texttt{src/hybrid\_detection.py}: 混合检测算法
-    \item \texttt{doc/README.md}: 详细技术文档
-    \item \texttt{slide/presentation.tex}: 本演示文稿
-  \end{itemize}
+%------------------------------------------------
+\section{项目文档说明}
+%------------------------------------------------
+\begin{frame}{项目文档说明}
+    \begin{itemize}
+        \item \texttt{process.py}: 主处理入口 (推荐使用)
+        \item \texttt{yolo\_singleton.py}: 优化后的YOLO单例实现
+        \item \texttt{src/tennis\_detection.py}: 传统方法检测
+        \item \texttt{src/hybrid\_detection.py}: 混合检测算法
+        \item \texttt{doc/README.md}: 详细技术文档
+        \item \texttt{slide/presentation.tex}: 本演示文稿
+    \end{itemize}
 \end{frame}
 
-
-% 未来改进方向
+%------------------------------------------------
 \section{未来改进方向}
+%------------------------------------------------
 \begin{frame}{未来改进方向}
-  \begin{enumerate}
-    \item \textbf{模型优化}: 使用网球专用数据集微调YOLO模型。
-    \item \textbf{加速检测}: 探索TensorRT/ONNX等加速方案。
-    \item \textbf{多目标跟踪}: 添加目标跟踪功能。
-    \item \textbf{距离估计}: 结合相机参数估计网球距离。
-    \item \textbf{边缘计算优化}: 针对嵌入式平台优化。
-  \end{enumerate}
+    \begin{enumerate}
+        \item \textbf{模型优化}: 使用网球专用数据集微调YOLO模型。
+        \item \textbf{加速检测}: 探索TensorRT/ONNX等加速方案。
+        \item \textbf{多目标跟踪}: 添加目标跟踪功能。
+        \item \textbf{距离估计}: 结合相机参数估计网球距离。
+        \item \textbf{边缘计算优化}: 针对嵌入式平台优化。
+    \end{enumerate}
 \end{frame}
 
+%------------------------------------------------
 % 致谢/Q&A
+%------------------------------------------------
 \begin{frame}
-  \centering
-  {\Huge 谢谢观看！}
-  \vfill
-  提问与交流
+    \centering
+    {\Huge 谢谢观看！}
+    \vfill
+    提问与交流
 \end{frame}
+
 
 \end{document}
