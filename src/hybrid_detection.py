@@ -10,8 +10,7 @@ from yolo_detection import YOLOTennisBallDetector
 
 
 class HybridTennisBallDetector:
-    """混合网球检测器，结合传统方法和YOLO方法"""
-      def __init__(self, model_path=None, hsv_lower=(25, 100, 100), hsv_upper=(65, 255, 255)):
+    def __init__(self, model_path=None, hsv_lower=(25, 100, 100), hsv_upper=(65, 255, 255)):
         """
         初始化混合网球检测器
         
@@ -188,7 +187,6 @@ def detect_all_images(input_dir, output_json=None, output_dir=None, model_path=N
 
 
 def main():
-    """主函数，运行混合检测"""
     # 获取项目根目录
     project_root = Path(__file__).parent.parent
     

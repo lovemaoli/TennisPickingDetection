@@ -6,7 +6,6 @@ from pathlib import Path
 
 
 class TennisBallDetector:
-    """网球检测类，用于识别图片中的网球"""
     
     def __init__(self, hsv_lower=(25, 100, 100), hsv_upper=(65, 255, 255)):
         """初始化网球检测器

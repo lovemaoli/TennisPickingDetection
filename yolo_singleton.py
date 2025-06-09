@@ -1,7 +1,3 @@
-"""
-YOLO网球检测器单例模式实现
-避免每次创建检测器实例都下载模型
-"""
 import cv2
 import numpy as np
 import os
@@ -16,7 +12,6 @@ _yolo_model = None
 _model_load_attempted = False
 
 class YOLOTennisBallDetector:
-    """使用YOLO模型的网球检测器，单例模式实现"""
     
     def __init__(self, model_path=None):
         """

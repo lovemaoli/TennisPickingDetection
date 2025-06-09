@@ -8,7 +8,6 @@ import numpy as np
 from pathlib import Path
 
 class ResultVisualizer:
-    """检测结果可视化器，提供交互式界面展示检测结果"""
     
     def __init__(self, image_folder, json_file):
         # 加载数据
@@ -32,7 +31,6 @@ class ResultVisualizer:
         self.create_layout()
     
     def create_layout(self):
-        """创建界面布局"""
         # 创建顶部控制栏
         control_frame = tk.Frame(self.root)
         control_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
@@ -98,7 +96,6 @@ class ResultVisualizer:
         self.load_current_image()
     
     def load_current_image(self):
-        """加载并显示当前索引的图像"""
         if not self.image_names:
             self.status_label.config(text="没有图像可以显示")
             return
@@ -140,7 +137,7 @@ class ResultVisualizer:
             
             # 在图片上添加总数信息
             ball_count = len(boxes)
-            text = f"检测到 {ball_count} 个网球"
+            text = f"ball : {ball_count}"
             cv2.putText(result_image, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             
             # 转换检测结果图像为RGB
@@ -177,7 +174,6 @@ class ResultVisualizer:
             self.status_label.config(text=f"处理图像时出错: {e}")
     
     def resize_image_to_fit(self, image, max_height=600):
-        """调整图像大小以适应画布"""
         # 获取原始尺寸
         h, w = image.shape[:2]
         
@@ -194,24 +190,20 @@ class ResultVisualizer:
         return cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
     
     def show_prev(self):
-        """显示上一张图像"""
         if self.current_index > 0:
             self.current_index -= 1
             self.load_current_image()
     
     def show_next(self):
-        """显示下一张图像"""
         if self.current_index < len(self.image_names) - 1:
             self.current_index += 1
             self.load_current_image()
     
     def toggle_detection(self):
-        """切换显示/隐藏检测结果"""
-        # 此功能可以在后续版本中实现
+        # 后续实现
         pass
     
     def save_current_image(self):
-        """保存当前检测结果图像"""
         if not hasattr(self, 'current_result_image'):
             self.status_label.config(text="没有图像可保存")
             return
@@ -232,7 +224,6 @@ class ResultVisualizer:
                 self.status_label.config(text=f"保存图像时出错: {e}")
     
     def save_all_images(self):
-        """保存所有检测结果图像"""
         # 打开文件夹选择对话框
         folder_path = filedialog.askdirectory(title="选择保存目录")
         
@@ -268,12 +259,10 @@ class ResultVisualizer:
                 self.status_label.config(text=f"保存图像时出错: {e}")
     
     def run(self):
-        """运行可视化器"""
         self.root.mainloop()
 
 
 def main():
-    """主函数"""
     # 获取项目根目录
     project_root = Path.cwd()
     

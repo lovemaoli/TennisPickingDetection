@@ -14,7 +14,6 @@ _yolo_model = None
 _model_load_attempted = False
 
 class YOLOTennisBallDetector:
-    """使用YOLO模型的网球检测器"""
     
     def __init__(self, model_path=None):
         """
