@@ -8,6 +8,7 @@ import ssl
 from pathlib import Path
 
 # 全局变量，记录模型加载状态
+yolo_repo_path = './yolov5'
 _yolo_model = None
 _model_load_attempted = False
 
@@ -66,12 +67,10 @@ class YOLOTennisBallDetector:
             elif os.path.exists(local_path):
                 print("加载本地预训练模型:", local_path)
                 self.model = torch.hub.load(
-                    'ultralytics/yolov5', 
-                    'custom', 
-                    path=local_path, 
-                    force_reload=False, 
-                    verbose=False,
-                    device='cpu'  # 直接指定使用CPU
+                    repo_or_dir=yolo_repo_path,
+                    model='custom',
+                    path=local_path,
+                    source='local'
                 )
             else:
                 # 下载预训练模型
@@ -86,7 +85,7 @@ class YOLOTennisBallDetector:
                 )
                 # 保存模型到本地以便下次使用
                 try:
-                    torch.save(self.model.state_dict(), local_path)
+                    # torch.save(self.model.state_dict(), local_path)
                     print(f"模型已保存到: {local_path}")
                 except Exception as e:
                     print(f"保存模型失败: {e}")
@@ -109,6 +108,8 @@ class YOLOTennisBallDetector:
             
         except Exception as e:
             print(f"初始化YOLO模型失败，将使用传统方法: {str(e)}")
+            import traceback
+            traceback.print_exc()
             self.model = None
     def detect(self, image_path):
         """
