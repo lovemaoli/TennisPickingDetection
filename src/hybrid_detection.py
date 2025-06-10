@@ -15,7 +15,7 @@ class HybridTennisBallDetector:
         初始化混合网球检测器
         
         参数:
-            model_path: YOLO模型路径，如果为None，则使用YOLOv5s预训练模型
+            model_path: YOLO模型路径，如果为None，则使用YOLOv5m预训练模型
             hsv_lower: HSV颜色空间的下界，默认为黄绿色的下界
             hsv_upper: HSV颜色空间的上界，默认为黄绿色的上界
         """
