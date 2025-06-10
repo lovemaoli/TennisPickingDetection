@@ -19,7 +19,7 @@ class YOLOTennisBallDetector:
         初始化YOLO网球检测器
         
         参数:
-            model_path: YOLO模型路径，如果为None，则使用YOLOv5s预训练模型
+            model_path: YOLO模型路径，如果为None，则使用YOLOv5m预训练模型
         """
         global _yolo_model, _model_load_attempted
         
@@ -51,7 +51,7 @@ class YOLOTennisBallDetector:
             warnings.filterwarnings("ignore", category=UserWarning)
             
             # 检查本地模型文件
-            local_path = os.path.join(os.path.dirname(__file__), "yolov5s.pt")
+            local_path = os.path.join(os.path.dirname(__file__), "yolov5m.pt")
             
             # 加载本地模型
             if model_path and os.path.exists(model_path):
@@ -77,28 +77,22 @@ class YOLOTennisBallDetector:
                 print("加载预训练模型，这可能需要一些时间...")
                 self.model = torch.hub.load(
                     'ultralytics/yolov5', 
-                    'yolov5s', 
+                    'yolov5m', 
                     pretrained=True, 
                     force_reload=False, 
                     verbose=False,
                     device='cpu'  # 直接指定使用CPU
                 )
-                # 保存模型到本地以便下次使用
-                try:
-                    # torch.save(self.model.state_dict(), local_path)
-                    print(f"模型已保存到: {local_path}")
-                except Exception as e:
-                    print(f"保存模型失败: {e}")
             
             # 设置为CPU模式，避免CUDA问题
             if hasattr(self.model, 'to'):
                 self.model.to('cpu')
             
-            # 设置网球类别（YOLOv5s预训练模型中的第32类为"sports ball"）
+            # 设置网球类别（YOLOv5m预训练模型中的第32类为"sports ball"）
             self.ball_class = 32
             
             # 设置置信度阈值
-            self.model.conf = 0.5
+            self.model.conf = 0.3
             
             # 保存到全局变量
             _yolo_model = self.model

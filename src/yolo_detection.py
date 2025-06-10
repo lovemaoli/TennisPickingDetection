@@ -20,7 +20,7 @@ class YOLOTennisBallDetector:
         初始化YOLO网球检测器
         
         参数:
-            model_path: YOLO模型路径，如果为None，则使用YOLOv5s预训练模型
+            model_path: YOLO模型路径，如果为None，则使用YOLOv5m预训练模型
         """
         global _yolo_model, _model_load_attempted
         
@@ -57,7 +57,7 @@ class YOLOTennisBallDetector:
                     )
                     print("YOLO模型加载成功，使用设备:", self.model.device)
                 else:                    # 使用本地保存的预训练模型
-                    local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "yolov5s.pt")
+                    local_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "yolov5m.pt")
                     if os.path.exists(local_path):
                         print("加载本地预训练模型:", local_path)
                         self.model = torch.hub.load(
@@ -73,7 +73,7 @@ class YOLOTennisBallDetector:
                         print("加载预训练模型")
                         self.model = torch.hub.load(
                             'ultralytics/yolov5', 
-                            'yolov5s', 
+                            'yolov5m', 
                             pretrained=True, 
                             force_reload=False, 
                             verbose=False,
@@ -99,7 +99,7 @@ class YOLOTennisBallDetector:
             print(f"初始化YOLO模型失败，将使用传统方法: {str(e)}")
             self.model = None
         
-        # 设置网球类别（YOLOv5s预训练模型中的第32类为"sports ball"）
+        # 设置网球类别（YOLOv5m预训练模型中的第32类为"sports ball"）
         self.ball_class = 32
         
         # 设置置信度阈值

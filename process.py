@@ -160,13 +160,12 @@ class HybridTennisBallDetector:
             return traditional_results
         elif yolo_results and traditional_results:
             # 如果两种方法都有结果，返回检测数量更合理的结果
-            # 通常网球数量不会太多，如果传统方法检测出很多，可能是误检
+            # 通常网球数量不会太多，如果yolo检测出很多，可能是误检
             if len(traditional_results) > 5 and len(yolo_results) < 5:
-                return yolo_results
-            else:
                 return traditional_results
+            else:
+                return yolo_results
         else:
-            # 两种方法都没有结果
             return []
 
 
